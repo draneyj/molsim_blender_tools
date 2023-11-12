@@ -1,0 +1,7 @@
+__pychache__/
+.vscode/
+testout/
+test_dumps/
+make_frames.py
+*.blend
+*.blend1

@@ -6,8 +6,6 @@ import sys
 sys.path.insert(0, r"C:\Users\jacks\Desktop\Blender\python")
 import import_dump
 
-
-
 # define input ============================================================================================
 dump_location = r"test_dumps"  # folder if individual. file if composite
 composite = False

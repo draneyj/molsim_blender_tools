@@ -30,10 +30,6 @@ mesh = bpy.data.meshes.new("mesh")
 atom_obj = bpy.data.objects.new('atoms', mesh)
 bpy.context.scene.collection.children[0].objects.link(atom_obj)
 
-# bond_mesh = bpy.data.meshes.new("mesh")
-# bond_obj = bpy.data.objects.new('bonds', bond_mesh)
-# bpy.context.scene.collection.children[0].objects.link(bond_obj)
-
 # create mesh geometry data
 print("defining geometry data")
 if "ux" in fields:
@@ -47,31 +43,18 @@ else:
 rs = np.array([[atom[x_ix], atom[y_ix], atom[z_ix]] for atom in atoms])
 mesh.from_pydata(rs, [], [])
 
-# bond_mesh.from_pydata(midpoints,[], [])
-
-# bond_obj.data.attributes.new(name='rotation', type='FLOAT_VECTOR', domain='POINT')
-# rotations = np.array(rotations).reshape(-1)
-# bond_obj.data.attributes['rotation'].data.foreach_set('vector', rotations)
-
-# bond_obj.data.attributes.new(name='scale', type='FLOAT', domain='POINT')
-# bond_obj.data.attributes['scale'].data.foreach_set('value', scales)
-
 print("defining coloring data")
 # define coloring attribute data
 for i, field in enumerate(fields):
         atom_obj.data.attributes.new(name=field.upper(), type='FLOAT', domain='POINT')
         atom_obj.data.attributes[field.upper()].data.foreach_set('value', [atom[i] for atom in atoms])
 
-# bond_obj.data.attributes.new(name='bond_value', type='FLOAT', domain='POINT')
-# bond_obj.data.attributes['bond_value'].data.foreach_set('value', bond_values)
-
 print("defining materials")
 
 # make valued materials
 atom_value_material = bpy.data.materials.new(name="atom_val_mat")
 atom_value_material.use_nodes = True
-# bond_value_material = bpy.data.materials.new(name="bond_val_mat")
-# bond_value_material.use_nodes = True
+
 # make chemical materials
 atom_1_material = bpy.data.materials.new(name="atom_1_mat")
 atom_1_material.use_nodes = True
@@ -208,67 +191,6 @@ ng.links.new(minmax_node.outputs['Max'], map_range_node.inputs['From Max'])
 ng.links.new(map_range_node.outputs['Result'], color_node.inputs['Fac'])
 ng.links.new(color_node.outputs['Color'], output.inputs['AtomColor'])
 
-    # bonds
-# print("defining bond geonode modifier")
-# bpy.context.view_layer.objects.active = bond_obj
-# bpy.ops.object.modifier_add(type='NODES')
-# ng = bond_obj.modifiers[-1].node_group
-# nodes = ng.nodes
-
-# input = nodes.get('Group Input')
-# output = nodes.get('Group Output')
-#         # attributes
-# print("defining bond attributes")
-# new_attribute = ng.inputs.new('NodeSocketVectorXYZ', "rotation")
-# bond_obj.modifiers[-1][new_attribute.identifier+'_attribute_name'] = 'rotation'
-# bond_obj.modifiers[-1][new_attribute.identifier+'_use_attribute'] = True
-# new_attribute = ng.inputs.new('NodeSocketFloat', "scale")
-# bond_obj.modifiers[-1][new_attribute.identifier+'_attribute_name'] = 'scale'
-# bond_obj.modifiers[-1][new_attribute.identifier+'_use_attribute'] = True
-# new_attribute = ng.inputs.new('NodeSocketFloat', "bond_value")
-# bond_obj.modifiers[-1][new_attribute.identifier+'_attribute_name'] = 'bond_value'
-# bond_obj.modifiers[-1][new_attribute.identifier+'_use_attribute'] = True
-# new_attribute = ng.outputs.new('NodeSocketColor','BondColor')
-# bond_obj.modifiers[-1][new_attribute.identifier+'_attribute_name'] = 'bond_color'
-# bond_obj.modifiers[-1][new_attribute.identifier+'_use_attribute'] = True
-#         # nodes
-# print("defining bond nodes")
-# cyl_node = nodes.new('GeometryNodeMeshCylinder')
-# cyl_node.inputs['Radius'].default_value=0.05
-# cyl_node.inputs['Depth'].default_value=1.0
-# set_material_node = nodes.new('GeometryNodeSetMaterial')
-# set_material_node.inputs['Material'].default_value = bond_value_material
-# smooth_node = nodes.new('GeometryNodeSetShadeSmooth')
-# combine_xyz_node = nodes.new('ShaderNodeCombineXYZ')
-# combine_xyz_node.inputs['X'].default_value = 1.0
-# combine_xyz_node.inputs['Y'].default_value = 1.0
-# instance_node = nodes.new('GeometryNodeInstanceOnPoints')
-# minmax_node = nodes.new('GeometryNodeAttributeStatistic')
-# map_range_node = nodes.new('ShaderNodeMapRange')
-# color_node = nodes.new('ShaderNodeValToRGB')
-# realize_instances_node = nodes.new('GeometryNodeRealizeInstances')
-
-#         #links: geometry
-# print("defining bond links")
-# ng.links.new(input.outputs['Geometry'], instance_node.inputs['Points'])
-# ng.links.new(input.outputs['rotation'], instance_node.inputs['Rotation'])
-# ng.links.new(input.outputs['scale'], combine_xyz_node.inputs['Z'])
-# ng.links.new(combine_xyz_node.outputs['Vector'], instance_node.inputs['Scale'])
-# ng.links.new(cyl_node.outputs['Mesh'], smooth_node.inputs['Geometry'])
-# ng.links.new(smooth_node.outputs['Geometry'], set_material_node.inputs['Geometry'])
-# ng.links.new(set_material_node.outputs['Geometry'], instance_node.inputs['Instance'])
-# ng.links.new(instance_node.outputs['Instances'], realize_instances_node.inputs['Geometry'])
-# ng.links.new(realize_instances_node.outputs['Geometry'],output.inputs['Geometry'])
-
-#         #links: Value Color
-# ng.links.new(input.outputs['Geometry'], minmax_node.inputs['Geometry'])
-# ng.links.new(input.outputs['bond_value'], minmax_node.inputs['Attribute'])
-# ng.links.new(input.outputs['bond_value'], map_range_node.inputs['Value'])
-# ng.links.new(minmax_node.outputs['Min'], map_range_node.inputs['From Min'])
-# ng.links.new(minmax_node.outputs['Max'], map_range_node.inputs['From Max'])
-# ng.links.new(map_range_node.outputs['Result'], color_node.inputs['Fac'])
-# ng.links.new(color_node.outputs['Color'], output.inputs['BondColor'])
-
 print("defining shader nodes")
 # shader nodes
 attribute_node = atom_value_material.node_tree.nodes.new("ShaderNodeAttribute")
@@ -279,12 +201,6 @@ atom_value_material.node_tree.links.new(attribute_node.outputs['Color'],
 atom_value_material.node_tree.links.new(attribute_node.outputs['Alpha'], 
                         atom_value_material.node_tree.nodes['Principled BSDF'].inputs['Alpha'])
 
-# attribute_node = bond_value_material.node_tree.nodes.new("ShaderNodeAttribute")
-# attribute_node.attribute_name = "bond_color"
-# bond_value_material.node_tree.links.new(attribute_node.outputs['Color'], 
-#                         bond_value_material.node_tree.nodes['Principled BSDF'].inputs['Base Color'])
-# bond_value_material.node_tree.links.new(attribute_node.outputs['Alpha'], 
-#                         bond_value_material.node_tree.nodes['Principled BSDF'].inputs['Alpha'])
 print("done")
 
 # frame update function
@@ -296,7 +212,6 @@ def mesh_update(scene):
             fields, atoms, N, time = import_dump.lammps_single(dump_data_list[scene.frame_current - 1])
         
         atom_obj = bpy.context.scene.objects['atoms']
-        #     bond_obj = bpy.context.scene.objects['bonds']
         if "ux" in fields:
                 x_ix = fields.index("ux")
                 y_ix = fields.index("uy")
@@ -313,18 +228,4 @@ def mesh_update(scene):
                 atom_obj.data.attributes.new(name=field.upper(), type='FLOAT', domain='POINT')
                 atom_obj.data.attributes[field.upper()].data.foreach_set('value', [atom[i] for atom in atoms])
 
-        #     mesh = bpy.data.meshes.new("mesh")
-        #     mesh.from_pydata(midpoints,[],[])
-        #     bond_obj.data = mesh
-        
-        #     bond_obj.data.attributes.new(name='rotation', type='FLOAT_VECTOR', domain='POINT')
-        #     rotations = np.array(rotations).reshape(-1)
-        #     bond_obj.data.attributes['rotation'].data.foreach_set('vector', rotations)
-
-        #     bond_obj.data.attributes.new(name='scale', type='FLOAT', domain='POINT')
-        #     bond_obj.data.attributes['scale'].data.foreach_set('value', scales)
-
-        #     bond_obj.data.attributes.new(name='bond_value', type='FLOAT', domain='POINT')
-        #     bond_obj.data.attributes['bond_value'].data.foreach_set('value', bond_values)
-        
 bpy.app.handlers.frame_change_pre.append(mesh_update)

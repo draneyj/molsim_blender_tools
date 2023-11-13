@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, r"C:\Users\jacks\Desktop\Blender\python")
 import import_dump
 # define input ============================================================================================
-dump_location = r"." # folder if individual. file if composite
+dump_location = r"test_atoms_bonds" # folder if individual. file if composite
 composite = False
 bond_id1_ix = 0
 bond_dx_ix = 2

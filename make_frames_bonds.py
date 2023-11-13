@@ -8,7 +8,7 @@ import import_dump
 
 
 # define input ============================================================================================
-dump_location = r"test_dumps"  # folder if individual. file if composite
+dump_location = r"test_atoms_bonds"  # folder if individual. file if composite
 composite = False
 coloring_field = 'v_vdia'.upper()  # name of heading to color by. Can change later in geonodes. must be uppercase
 bond_id1_ix = 0  # index of atom id 1 in bond dumps

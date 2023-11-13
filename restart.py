@@ -6,9 +6,10 @@ import sys
 sys.path.insert(0, r"C:\Users\jacks\Desktop\Blender\python")
 import import_dump
 
-dump_location = r"C:\Users\jacks\Desktop\Blender\python\test_dumps" # folder if individual. file if composite
+# define input ============================================================================================
+dump_location = r"test_dumps" # folder if individual. file if composite
 composite = False
-
+# define input ============================================================================================
 
 print("loading dump file")
 dumpfiles = [f.path for f in scandir(dump_location) if "dump" in f.name]

@@ -7,26 +7,27 @@ sys.path.insert(0, r"C:\Users\jacks\Desktop\Blender\python")
 import import_dump
 
 
-# define input
-# dump_location = r"C:\Users\jacks\Desktop\Blender\python\test_dumps" # folder if individual. file if composite
-dump_location = r"C:\Users\jacks\Desktop\econ\test_dump" # folder if individual. file if composite
+# define input ============================================================================================
+dump_location = r"test_dumps"  # folder if individual. file if composite
 composite = False
-coloring_field = 'v_vdia'.upper() # name of heading to color by. Can change later in geonodes. must be uppercase
-bond_id1_ix = 0
-bond_dx_ix = 2
-bond_dist_ix = 5
-
+coloring_field = 'v_vdia'.upper()  # name of heading to color by. Can change later in geonodes. must be uppercase
+bond_id1_ix = 0  # index of atom id 1 in bond dumps
+bond_id2_ix = bond_id1_ix + 1  # index of atom id 2 in bond dumps
+bond_dx_ix = 2  # index of x component of bond position vector in bond dumps. x, y must folow
+bond_dist_ix = 5  # index of bond distance in bond dumps
+sortkey = import_dump.dumpnum  # how should the dumps be sorted
+# define input ============================================================================================
 
 print("loading dump file")
 if composite:
-    dump_data_list = import_dump.lammps_composite(dump_location)
     raise Exception("no composites please")
+    dump_data_list = import_dump.lammps_composite(dump_location)
     fields, atoms, N, time = dump_data_list[0]
 else:
     dump_data_list = [f.path for f in scandir(dump_location) if "dump" in f.name and "atom" in f.name]
     bond_data_list = [f.path for f in scandir(dump_location) if "dump" in f.name and "bond" in f.name]
     dump_data_list.sort(key=import_dump.dumpnum)
-    bond_data_list.sort(key=import_dump.dumpnum)
+    bond_data_list.sort(key=sortkey)
     fields, atoms, N, time = import_dump.lammps_single(dump_data_list[0])
     bfields, bonds, bN, _ = import_dump.lammps_bond_single(bond_data_list[0], cutoff=2.0, cutoff_index=bond_dist_ix)
 
@@ -57,10 +58,10 @@ rs = np.array([[atom[x_ix], atom[y_ix], atom[z_ix]] for atom in atoms])
 mesh.from_pydata(rs, [], [])
 
 if np.all(np.arange(1, N + 1) == np.array([a[0] for a in atoms])):
-        midpoints = [np.array(atoms[int(np.minimum(b[bond_id1_ix],b[bond_id1_ix+1])-1)][x_ix:z_ix+1]) - np.array(b[bond_dx_ix:bond_dx_ix+3])/2 for b in bonds]
+        midpoints = [np.array(atoms[int(np.minimum(b[bond_id1_ix],b[bond_id2_ix])-1)][x_ix:z_ix+1]) - np.array(b[bond_dx_ix:bond_dx_ix+3])/2 for b in bonds]
 else:
       atom_ids = [a[0] for a in atoms]
-      midpoints = [np.array(atoms[atom_ids.index(np.minimum(b[bond_id1_ix],b[bond_id1_ix+1]))][x_ix:z_ix+1]) - np.array(b[bond_dx_ix:bond_dx_ix+3])/2 for b in bonds]
+      midpoints = [np.array(atoms[atom_ids.index(np.minimum(b[bond_id1_ix],b[bond_id2_ix]))][x_ix:z_ix+1]) - np.array(b[bond_dx_ix:bond_dx_ix+3])/2 for b in bonds]
 #       raise Exception("implement bond endpoint finding for non-sequential atom numbering")
 rotations = [import_dump.vec2rot(b[bond_dx_ix:bond_dx_ix+3]) for b in bonds]
 scales = [b[bond_dist_ix] for b in bonds]
@@ -340,7 +341,7 @@ def mesh_update(scene):
         mesh.from_pydata(rs,[],[])
         atom_obj.data = mesh
         if np.all(np.arange(1, N + 1) == np.array([a[0] for a in atoms])):
-                midpoints = [np.array(atoms[int(np.minimum(b[bond_id1_ix],b[bond_id1_ix+1])-1)][x_ix:z_ix+1]) - np.array(b[bond_dx_ix:bond_dx_ix+3])/2 for b in bonds]
+                midpoints = [np.array(atoms[int(np.minimum(b[bond_id1_ix],b[bond_id2_ix])-1)][x_ix:z_ix+1]) - np.array(b[bond_dx_ix:bond_dx_ix+3])/2 for b in bonds]
                 rotations = [import_dump.vec2rot(b[bond_dx_ix:bond_dx_ix+3]) for b in bonds]
                 scales = [b[bond_dist_ix] for b in bonds]
         else:

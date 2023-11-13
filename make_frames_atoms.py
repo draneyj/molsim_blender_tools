@@ -8,10 +8,12 @@ import import_dump
 
 
 
-# define input
-dump_location = r"C:\Users\jacks\Desktop\Blender\python\test_dumps" # folder if individual. file if composite
+# define input ============================================================================================
+dump_location = r"test_dumps"  # folder if individual. file if composite
 composite = False
-coloring_field = 'c_atom_KE'.upper() # name of heading to color by. Can change later in geonodes. must be uppercase
+coloring_field = 'c_atom_KE'.upper()  # name of heading to color by. Can change later in geonodes. must be uppercase
+sortkey = import_dump.dumpnum  # how should the dumps be sorted
+# define input ============================================================================================
 
 print("loading dump file")
 if composite:
@@ -19,7 +21,7 @@ if composite:
     fields, atoms, N, time = dump_data_list[0]
 else:
     dump_data_list = [f.path for f in scandir(dump_location) if "dump" in f.name]
-    dump_data_list.sort(key=import_dump.dumpnum)
+    dump_data_list.sort(key=sortkey)
     fields, atoms, N, time = import_dump.lammps_single(dump_data_list[0])
 
 bpy.context.scene.frame_end = len(dump_data_list)

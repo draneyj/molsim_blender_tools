@@ -5,12 +5,13 @@ from os import scandir
 import sys
 sys.path.insert(0, r"C:\Users\jacks\Desktop\Blender\python")
 import import_dump
-
+# define input ============================================================================================
 dump_location = r"." # folder if individual. file if composite
 composite = False
 bond_id1_ix = 0
 bond_dx_ix = 2
 bond_dist_ix = 5
+# define input ============================================================================================
 
 print("loading dump file")
 dump_data_list = [f.path for f in scandir(dump_location) if "dump" in f.name and "atom" in f.name]

@@ -79,7 +79,8 @@ print("defining atom geonodes attributes")
 new_attribute = ng.inputs.new('NodeSocketFloat', "TYPE")
 atom_obj.modifiers[-1][new_attribute.identifier+'_attribute_name'] = 'TYPE'
 atom_obj.modifiers[-1][new_attribute.identifier+'_use_attribute'] = True
-new_attribute = ng.inputs.new('NodeSocketFloat', coloring_field)
+coloring_attribute_socket_name = "Coloring Attribute"
+new_attribute = ng.inputs.new('NodeSocketFloat', coloring_attribute_socket_name)
 atom_obj.modifiers[-1][new_attribute.identifier+'_attribute_name'] = coloring_field
 atom_obj.modifiers[-1][new_attribute.identifier+'_use_attribute'] = True
 new_attribute = ng.outputs.new('NodeSocketColor','AtomColor')
@@ -184,8 +185,8 @@ ng.links.new(ID_compare_node_2.outputs['Result'], separate_geometry_node_2.input
 
         #links: Value Color
 ng.links.new(instance_node.outputs['Instances'], minmax_node.inputs['Geometry'])
-ng.links.new(input.outputs[coloring_field], minmax_node.inputs['Attribute'])
-ng.links.new(input.outputs[coloring_field], map_range_node.inputs['Value'])
+ng.links.new(input.outputs[coloring_attribute_socket_name], minmax_node.inputs['Attribute'])
+ng.links.new(input.outputs[coloring_attribute_socket_name], map_range_node.inputs['Value'])
 ng.links.new(minmax_node.outputs['Min'], map_range_node.inputs['From Min'])
 ng.links.new(minmax_node.outputs['Max'], map_range_node.inputs['From Max'])
 ng.links.new(map_range_node.outputs['Result'], color_node.inputs['Fac'])

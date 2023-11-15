@@ -7,7 +7,7 @@ sys.path.insert(0, r"C:\Users\jacks\Desktop\Blender\python")
 import import_dump
 
 # define input ============================================================================================
-dump_location = r"test_dumps"  # folder if individual. file if composite
+dump_location = r"test_dumps_small"  # folder if individual. file if composite
 composite = False
 coloring_field = 'c_atom_KE'.upper()  # name of heading to color by. Can change later in geonodes. must be uppercase
 sortkey = import_dump.dumpnum  # how should the dumps be sorted

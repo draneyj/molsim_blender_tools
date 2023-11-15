@@ -76,14 +76,14 @@ output = nodes.get('Group Output')
 output.location = (1000, 0)
         # attributes
 print("defining atom geonodes attributes")
-new_attribute = ng.inputs.new('NodeSocketFloat', "TYPE")
+new_attribute = ng.interface.new_socket(socket_type="NodeSocketFloat", name="TYPE", in_out="INPUT")
 atom_obj.modifiers[-1][new_attribute.identifier+'_attribute_name'] = 'TYPE'
 atom_obj.modifiers[-1][new_attribute.identifier+'_use_attribute'] = True
 coloring_attribute_socket_name = "Coloring Attribute"
-new_attribute = ng.inputs.new('NodeSocketFloat', coloring_attribute_socket_name)
+new_attribute = ng.interface.new_socket(socket_type='NodeSocketFloat', name=coloring_attribute_socket_name, in_out="INPUT")
 atom_obj.modifiers[-1][new_attribute.identifier+'_attribute_name'] = coloring_field
 atom_obj.modifiers[-1][new_attribute.identifier+'_use_attribute'] = True
-new_attribute = ng.outputs.new('NodeSocketColor','AtomColor')
+new_attribute = ng.interface.new_socket(socket_type='NodeSocketColor', name='AtomColor', in_out="OUTPUT")
 atom_obj.modifiers[-1][new_attribute.identifier+'_attribute_name'] = 'atom_color'
 atom_obj.modifiers[-1][new_attribute.identifier+'_use_attribute'] = True
         # nodes

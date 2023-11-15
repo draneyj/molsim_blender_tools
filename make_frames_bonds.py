@@ -10,7 +10,7 @@ import import_dump
 # define input ============================================================================================
 dump_location = r"test_atoms_bonds"  # folder if individual. file if composite
 composite = False
-atom_coloring_field = 'v_vdia'.upper()  # name of heading to color by. Can change later in geonodes. must be uppercase
+atom_coloring_field = 'v_is_diamond'.upper()  # name of heading to color by. Can change later in geonodes. must be uppercase
 bond_coloring_field = 'c_pld[5]'.upper()  # name of heading to color by. Can change later in geonodes. must be uppercase
 bond_id1_ix = 0  # index of atom id 1 in bond dumps
 bond_id2_ix = bond_id1_ix + 1  # index of atom id 2 in bond dumps

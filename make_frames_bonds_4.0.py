@@ -3,7 +3,7 @@ import bmesh
 import numpy as np
 from os import scandir
 import sys
-sys.path.insert(0, r"C:\Users\jacks\Desktop\Blender\python")
+sys.path.insert(0, r"Users/jd6157/Documents/blender_projects/python")
 import import_dump
 
 
@@ -327,7 +327,7 @@ def mesh_update(scene):
             fields, atoms, N, time = dump_data_list[scene.frame_current - 1]
         else:
             fields, atoms, N, time = import_dump.lammps_single(dump_data_list[scene.frame_current - 1])
-            bfields, bonds, bN, _ = import_dump.lammps_bond_single(bond_data_list[0], cutoff=2.0, cutoff_index=bond_dist_ix)
+            bfields, bonds, bN, _ = import_dump.lammps_bond_single(bond_data_list[scene.frame_current - 1], cutoff=2.0, cutoff_index=bond_dist_ix)
         atom_obj = bpy.context.scene.objects['atoms']
         bond_obj = bpy.context.scene.objects['bonds']
         if "ux" in fields:

@@ -3,8 +3,9 @@ import bmesh
 import numpy as np
 from os import scandir
 import sys
-sys.path.insert(0, r"C:\Users\jacks\Desktop\Blender\python")
+sys.path.insert(0, r"Users/jd6157/Documents/blender_projects/python")
 import import_dump
+
 # define input ============================================================================================
 dump_location = r"test_atoms_bonds" # folder if individual. file if composite
 composite = False

@@ -12,11 +12,15 @@ composite = False
 # define input ============================================================================================
 
 print("loading dump file")
-dumpfiles = [f.path for f in scandir(dump_location) if "dump" in f.name]
-bpy.context.scene.frame_end = len(dumpfiles)
-dumpfiles.sort(key=import_dump.dumpnum)
+if not composite:
+    dumpfiles = [f.path for f in scandir(dump_location) if "dump" in f.name]
+    bpy.context.scene.frame_end = len(dumpfiles)
+    dumpfiles.sort(key=import_dump.dumpnum)
+    nframes = len(dumpfiles)
 if composite:
     dump_data_list = import_dump.lammps_composite(dump_location)
+    bpy.context.scene.frame_end = len(dump_data_list)
+    nframes = len(dump_data_list)
 
 # clear current junk handlers
 while len(bpy.app.handlers.frame_change_pre) > 0:
@@ -24,7 +28,7 @@ while len(bpy.app.handlers.frame_change_pre) > 0:
 
 
 def mesh_update(scene):
-    if scene.frame_current <= len(dumpfiles):
+    if scene.frame_current <= nframes:
         if composite:
             fields, atoms, N, time = dump_data_list[scene.frame_current - 1]              
         else:

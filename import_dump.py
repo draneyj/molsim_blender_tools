@@ -126,6 +126,9 @@ def dumpnum(path):
 
 def dumpnums(path):
     nums = basename(path).replace("dump", "").replace("atoms", "").replace("bonds", "")[:-1].split("_")
+    for i in range(len(nums)):
+        if nums[i] == '':
+            nums[i] = 0
     nums = [float(n) for n in nums]
     return nums[0] * 1e8 + nums[1]  # hack for now since I didn't sleep. LOOK HERE IF THERE IS A BUG ON ORDERING
 

@@ -2,27 +2,67 @@ import bpy
 import bmesh
 import numpy as np
 from os import scandir
-import sys
-sys.path.insert(0, r"/Users/jd6157/Documents/blender_projects/python")
-import import_dump
+import pyopenvdb as openvdb
+
+def read_cube(path, make_grid=True):
+    f = open(path, "r")
+    lines = f.readlines()
+    lines = lines[2:]
+    N_atoms = int(lines[0].split()[0])
+    N_points_x = int(lines[1].split()[0])
+    x_step = float(lines[1].split()[1])
+    N_points_y = int(lines[2].split()[0])
+    y_step = float(lines[2].split()[2])
+    N_points_z = int(lines[3].split()[0])
+    z_step = float(lines[3].split()[3])
+    atom_lines = lines[4:4+N_atoms]
+    rs = np.array([[float(x) for x in line.split()[-3:]] for line in atom_lines])
+    ids = np.array([int(line.split()[0]) for line in atom_lines])
+    qs = np.array([float(line.split()[1]) for line in atom_lines])
+    if make_grid:
+        density_lines = lines[4+N_atoms:]
+        densities = np.zeros((N_points_x, N_points_y, N_points_z))
+        i = j = k = 0
+        for line in density_lines:
+            for chunk in line.split():
+                densities[i, j, k] = float(chunk)
+                k += 1
+                if k == N_points_z:
+                    k = 0
+                    j += 1
+                    if j == N_points_y:
+                        j = 0
+                        i += 1
+        
+        dmax = np.max(densities)
+        dmin = np.min(densities)
+        densities = (densities - dmin) / (dmax - dmin)
+        densities = np.clip(densities, 0, 1)
+        
+        grid = openvdb.FloatGrid()
+        grid.copyFromArray(densities.astype(float))
+        grid.transform = openvdb.createLinearTransform([[1,0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,1]])
+        grid.gridClass = openvdb.GridClass.FOG_VOLUME
+        grid.name='density'
+    else:
+        grid=None
+    f.close()
+    return rs, ids, qs, grid
+
 
 # define input ============================================================================================
-dump_location = r"test_dumps_small"  # folder if individual. file if composite
+cube_location = r"/Users/jd6157/Documents/blender_projects/cl2diss/cubes"  # folder if individual. file if composite
 composite = False
-coloring_field = 'c_atom_KE'.upper()  # name of heading to color by. Can change later in geonodes. must be uppercase
-sortkey = import_dump.dumpnum  # how should the dumps be sorted
+coloring_field = 'q'.upper()  # name of heading to color by. Can change later in geonodes. must be uppercase
 # define input ============================================================================================
 
-print("loading dump file")
-if composite:
-    dump_data_list = import_dump.lammps_composite(dump_location)
-    fields, atoms, N, time = dump_data_list[0]
-else:
-    dump_data_list = [f.path for f in scandir(dump_location) if "dump" in f.name]
-    dump_data_list.sort(key=sortkey)
-    fields, atoms, N, time = import_dump.lammps_single(dump_data_list[0])
+print("loading cube file")
+cube_data_list = [f.path for f in scandir(cube_location) if "cube" in f.name]
+cube_data_list.sort()
+fields = ["x", "y", "z", "id", "q"]
+rs, ids, qs, grid = read_cube(cube_data_list[0])
 
-bpy.context.scene.frame_end = len(dump_data_list)
+bpy.context.scene.frame_end = len(cube_data_list)
 # define meshes
 print("creating meshes")
 
@@ -32,22 +72,13 @@ bpy.context.scene.collection.children[0].objects.link(atom_obj)
 
 # create mesh geometry data
 print("defining geometry data")
-if "ux" in fields:
-    x_ix = fields.index("ux")
-    y_ix = fields.index("uy")
-    z_ix = fields.index("uz")
-else:
-    x_ix = fields.index("x")
-    y_ix = fields.index("y")
-    z_ix = fields.index("z")
-rs = np.array([[atom[x_ix], atom[y_ix], atom[z_ix]] for atom in atoms])
 mesh.from_pydata(rs, [], [])
 
 print("defining coloring data")
 # define coloring attribute data
-for i, field in enumerate(fields):
-        atom_obj.data.attributes.new(name=field.upper(), type='FLOAT', domain='POINT')
-        atom_obj.data.attributes[field.upper()].data.foreach_set('value', [atom[i] for atom in atoms])
+for field_name, field in zip(["id", "q"], [ids, qs]):
+        atom_obj.data.attributes.new(name=field_name.upper(), type='FLOAT', domain='POINT')
+        atom_obj.data.attributes[field_name.upper()].data.foreach_set('value', field)
 
 print("defining materials")
 
@@ -204,29 +235,37 @@ atom_value_material.node_tree.links.new(attribute_node.outputs['Alpha'],
 
 print("done")
 
+# Volume ============================================================================================
+print("creating volume")
+vscale = 0.25
+bpy.ops.object.volume_add(align='WORLD', location=(0, 0, 0), scale=(vscale, vscale, vscale))
+volume_obj = bpy.context.scene.objects['Volume']
+openvdb.write("/tmp/volume.vdb", grid)
+volume_obj.data.filepath = "/tmp/volume.vdb"
+volume_material = bpy.data.materials.new(name="volume_mat")
+volume_material.use_nodes = True
+volume_obj.data.materials.append(volume_material)
+
 # frame update function
-def mesh_update(scene):
-    if scene.frame_current <= len(dump_data_list):
-        if composite:
-            fields, atoms, N, time = dump_data_list[scene.frame_current - 1]
-        else:
-            fields, atoms, N, time = import_dump.lammps_single(dump_data_list[scene.frame_current - 1])
-        
+def mesh_volume_update(scene):
+    if scene.frame_current <= len(cube_data_list):
+        print("loading cube file")
+        vdb_path = os.path.join(cube_location,f"{scene.frame_current:04d}.vdb")
+        make_cube = not os.path.exists(vdb_path)
+        rs, ids, qs, grid = read_cube(cube_data_list[scene.frame_current - 1], make_cube)
+
         atom_obj = bpy.context.scene.objects['atoms']
-        if "ux" in fields:
-                x_ix = fields.index("ux")
-                y_ix = fields.index("uy")
-                z_ix = fields.index("uz")
-        else:
-                x_ix = fields.index("x")
-                y_ix = fields.index("y")
-                z_ix = fields.index("z")
-        rs = np.array([[atom[x_ix], atom[y_ix], atom[z_ix]] for atom in atoms])
         mesh = bpy.data.meshes.new("mesh")
         mesh.from_pydata(rs,[],[])
         atom_obj.data = mesh
-        for i, field in enumerate(fields):
-                atom_obj.data.attributes.new(name=field.upper(), type='FLOAT', domain='POINT')
-                atom_obj.data.attributes[field.upper()].data.foreach_set('value', [atom[i] for atom in atoms])
+        for field_name, field in zip(["id", "q"], [ids, qs]):
+                atom_obj.data.attributes.new(name=field_name.upper(), type='FLOAT', domain='POINT')
+                atom_obj.data.attributes[field_name.upper()].data.foreach_set('value', field)
+        # os.remove("/tmp/volume.vdb")
+        if make_cube:
+            openvdb.write(vdb_path, grid)
+        volume_obj = bpy.context.scene.objects['Volume']
+        volume_obj.data.filepath = vdb_path
 
-bpy.app.handlers.frame_change_pre.append(mesh_update)
+
+bpy.app.handlers.frame_change_pre.append(mesh_volume_update)
